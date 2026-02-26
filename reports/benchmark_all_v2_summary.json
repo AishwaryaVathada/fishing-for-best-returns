@@ -1,0 +1,192 @@
+{
+    "backend":  "toy",
+    "custom_env":  null,
+    "train_steps":  1000,
+    "horizon":  60,
+    "verify_rollouts":  8,
+    "results":  {
+                    "sac":  {
+                                "model_path":  "runs/benchmark_all_v2\\sac\\model.zip",
+                                "train_and_verify_seconds":  17.726244926452637,
+                                "verification":  {
+                                                     "n_rollouts":  8,
+                                                     "mean_return":  -8869.440773915023,
+                                                     "std_return":  251.48278163262447,
+                                                     "q05":  -9197.53559527555,
+                                                     "q50":  -8809.852563979053,
+                                                     "q95":  -8510.821042731488,
+                                                     "cvar10":  -9204.31916021014,
+                                                     "violation_rate":  1.0,
+                                                     "mean_time_to_violation":  10.625
+                                                 }
+                            },
+                    "ppo":  {
+                                "model_path":  "runs/benchmark_all_v2\\ppo\\model.zip",
+                                "train_and_verify_seconds":  2.4548115730285645,
+                                "verification":  {
+                                                     "n_rollouts":  8,
+                                                     "mean_return":  -8578.75041307088,
+                                                     "std_return":  250.89922454345336,
+                                                     "q05":  -8907.463428369254,
+                                                     "q50":  -8510.620517422305,
+                                                     "q95":  -8224.746958548592,
+                                                     "cvar10":  -8914.210531890429,
+                                                     "violation_rate":  1.0,
+                                                     "mean_time_to_violation":  10.625
+                                                 }
+                            },
+                    "td3":  {
+                                "model_path":  "runs/benchmark_all_v2\\td3\\model.zip",
+                                "train_and_verify_seconds":  12.317408561706543,
+                                "verification":  {
+                                                     "n_rollouts":  8,
+                                                     "mean_return":  -8605.535812618888,
+                                                     "std_return":  253.45681400619117,
+                                                     "q05":  -8907.455763929585,
+                                                     "q50":  -8612.746733940588,
+                                                     "q95":  -8224.740167155403,
+                                                     "cvar10":  -8914.202702880008,
+                                                     "violation_rate":  1.0,
+                                                     "mean_time_to_violation":  10.5
+                                                 }
+                            },
+                    "cppo":  {
+                                 "model_path":  "runs/benchmark_all_v2\\cppo\\model.pt",
+                                 "train_and_verify_seconds":  1.668217658996582,
+                                 "verification":  {
+                                                      "n_rollouts":  8,
+                                                      "mean_return":  -8657.662715063241,
+                                                      "std_return":  306.8817180062198,
+                                                      "q05":  -9053.313258746013,
+                                                      "q50":  -8618.003194391758,
+                                                      "q95":  -8225.113504227507,
+                                                      "cvar10":  -9128.016576823726,
+                                                      "violation_rate":  1.0,
+                                                      "mean_time_to_violation":  10.25
+                                                  }
+                             },
+                    "distributional":  {
+                                           "model_path":  "runs/benchmark_all_v2\\distributional\\model.zip",
+                                           "train_and_verify_seconds":  20.925397396087646,
+                                           "verification":  {
+                                                                "n_rollouts":  8,
+                                                                "mean_return":  -9031.307390923293,
+                                                                "std_return":  313.35107862914833,
+                                                                "q05":  -9382.276403216174,
+                                                                "q50":  -9134.01243545794,
+                                                                "q95":  -8547.44768119561,
+                                                                "cvar10":  -9455.096091730458,
+                                                                "violation_rate":  1.0,
+                                                                "mean_time_to_violation":  10.0
+                                                            }
+                                       },
+                    "es":  {
+                               "model_path":  "runs/benchmark_all_v2/es/model.pt",
+                               "train_and_verify_seconds":  null,
+                               "verification":  {
+                                                    "n_rollouts":  8,
+                                                    "mean_return":  -8582.153197835392,
+                                                    "std_return":  250.19240670318658,
+                                                    "q05":  -8907.854683191827,
+                                                    "q50":  -8523.061966528461,
+                                                    "q95":  -8225.135639742683,
+                                                    "cvar10":  -8914.601931805038,
+                                                    "violation_rate":  1.0,
+                                                    "mean_time_to_violation":  10.625
+                                                }
+                           }
+                },
+    "optuna":  {
+                   "sac":  {
+                               "algo":  "sac",
+                               "best_value":  -1253531.881437222,
+                               "best_params":  {
+                                                   "learning_rate":  3.2869372143260204E-05,
+                                                   "net_arch":  "small",
+                                                   "buffer_size":  100000,
+                                                   "batch_size":  128,
+                                                   "tau":  0.0024172604238866446
+                                               },
+                               "best_attrs":  {
+                                                  "mean_return":  -253531.881437222,
+                                                  "violation_rate":  1.0
+                                              }
+                           },
+                   "ppo":  {
+                               "algo":  "ppo",
+                               "best_value":  -1008611.3312338556,
+                               "best_params":  {
+                                                   "learning_rate":  1.4017264993746003E-05,
+                                                   "net_arch":  "large",
+                                                   "n_steps":  2048,
+                                                   "batch_size":  256,
+                                                   "n_epochs":  14,
+                                                   "gae_lambda":  0.972010390234646,
+                                                   "clip_range":  0.24615151201621657,
+                                                   "ent_coef":  0.001421828370870928
+                                               },
+                               "best_attrs":  {
+                                                  "mean_return":  -8611.331233855592,
+                                                  "violation_rate":  1.0
+                                              }
+                           },
+                   "td3":  {
+                               "algo":  "td3",
+                               "best_value":  -1008612.7555035088,
+                               "best_params":  {
+                                                   "learning_rate":  0.0005385029600125776,
+                                                   "net_arch":  "medium",
+                                                   "buffer_size":  300000,
+                                                   "batch_size":  512,
+                                                   "tau":  0.016902783769815723
+                                               },
+                               "best_attrs":  {
+                                                  "mean_return":  -8612.755503508866,
+                                                  "violation_rate":  1.0
+                                              }
+                           },
+                   "cppo":  {
+                                "algo":  "cppo",
+                                "best_value":  -1008506.7347992782,
+                                "best_params":  {
+                                                    "lr":  0.0001381790929629976,
+                                                    "clip_range":  0.24373490998101655,
+                                                    "lambda_lr":  0.044001427556529964,
+                                                    "cost_limit":  0.010295443994882914
+                                                },
+                                "best_attrs":  {
+                                                   "mean_return":  -8506.734799278254,
+                                                   "violation_rate":  1.0
+                                               }
+                            },
+                   "distributional":  {
+                                          "algo":  "distributional",
+                                          "best_value":  -1331240.6207098982,
+                                          "best_params":  {
+                                                              "learning_rate":  3.5710697122111274E-05,
+                                                              "net_arch":  "medium",
+                                                              "buffer_size":  1000000,
+                                                              "batch_size":  128,
+                                                              "tau":  0.018099390451050912
+                                                          },
+                                          "best_attrs":  {
+                                                             "mean_return":  -331240.6207098981,
+                                                             "violation_rate":  1.0
+                                                         }
+                                      },
+                   "es":  {
+                              "algo":  "es",
+                              "best_value":  -1008522.0691190184,
+                              "best_params":  {
+                                                  "population":  48,
+                                                  "sigma":  0.032824517851922835,
+                                                  "lr":  0.02084898860246372
+                                              },
+                              "best_attrs":  {
+                                                 "mean_return":  -8522.06911901838,
+                                                 "violation_rate":  1.0
+                                             }
+                          }
+               },
+    "llm_analysis_path":  "runs/benchmark_all_v2/llm_analysis.md"
+}

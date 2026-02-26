@@ -1,0 +1,19 @@
+# Core
+numpy>=1.24
+gymnasium>=0.29
+torch>=2.1,<2.6
+
+# RL
+stable-baselines3>=2.2
+sb3-contrib>=2.2
+rich>=14.0
+
+# Experimentation
+optuna>=3.6
+pandas>=2.0
+matplotlib>=3.7
+tqdm>=4.66
+tensorboard>=2.14
+
+# Optional (only needed if you have the provided wheel)
+# oceanrl==0.1.0
