@@ -1,97 +1,194 @@
-Reinforcement Learning for Long-Horizon Safety: Policy Verification Under Uncertainty
+# Reinforcement Learning for Long-Horizon Safety
+## Policy Verification Under Uncertainty for Sustainable Fishery Management
 
-This project implements a modular RL experimentation stack for sustainable fishery management with long-horizon objectives and explicit safety constraints. The reference task is a two-species ecosystem (salmon and sharks) where the agent chooses a continuous fishing effort each month to balance harvest yield against sustainability over a 75-year horizon (900 months). The reward structure and terminal sustainability bonuses follow the project specification.
+This repository implements a modular reinforcement learning (RL) experimentation stack for **long-horizon control with explicit safety constraints**, using a sustainable fishery management task as the reference domain.
 
-Key properties:
-- Long-horizon episodic control (default horizon: 900 steps, gamma = 1.0)
-- Continuous action space (non-negative fishing effort)
-- Multiple algorithms:
-  - SAC, TD3, PPO (Stable-Baselines3)
-  - Distributional RL: TQC (sb3-contrib, quantile critics for continuous control)
-  - Constrained PPO (C-PPO): primal-dual Lagrangian PPO implemented in PyTorch
-  - Evolution Strategies (ES): gradient-free policy search (OpenAI-style, antithetic sampling)
-- Optuna hyperparameter search with multi-seed validation
-- Policy verification under uncertainty via Monte Carlo rollouts and safety violation statistics
+The original project specification assumes an opaque transition function (a provided wheel). Because the exact runtime environment may be unavailable during development, this repo is designed so that **any compatible environment/dynamics backend can be plugged in** while keeping training, tuning, and verification unchanged. Your current draft is preserved conceptually but has been reformatted and aligned to standard software best practices. fileciteturn1file0
 
-Environment backends:
-- oceanrl backend: uses the provided black-box transition function (if installed)
-- toy backend: a research-grade predator-prey model with seasonality, saturation effects for effort, and process noise
-  (useful for local testing when the wheel or target runtime is unavailable)
+---
 
-Repository layout
+## Problem and task definition
 
+**State:**  
+A 2-species ecosystem state observed monthly:
+- salmon population
+- shark population
+- month index (encoded as seasonal features)
+
+**Action:**  
+A continuous **non-negative fishing effort**.
+
+**Objective (long-horizon):**  
+Maximize harvest yield while maintaining ecosystem sustainability over **900 months (75 years)**, with safety boundaries on minimum viable populations.
+
+### Reward and terminal bonus
+
+Per-step reward:
+
+- `r_t = K1 * salmon_caught_t - K2 * effort_t`
+- Optional reward shaping adds a penalty when safety constraints are violated.
+
+Terminal bonus at the end of the horizon:
+
+- `K3 * log(salmon_T) + K4 * log(shark_T)`
+
+### Safety constraints and cost signal
+
+Safety boundaries are encoded as a **cost signal**:
+- `cost = 1` if `(salmon < salmon_min_safe) OR (shark < shark_min_safe)` else `0`.
+
+This supports:
+- **reward shaping** (penalize violations in the reward), and
+- **constrained optimization** (C-PPO optimizes expected return subject to expected cost limits).
+
+---
+
+## Algorithms implemented
+
+This repo supports the requested algorithm set:
+
+### Stable-Baselines3 (SB3)
+- **PPO**
+- **SAC**
+- **TD3**
+
+### Distributional RL (continuous control)
+- **TQC** (Truncated Quantile Critics, via `sb3-contrib`)
+
+### Constrained RL
+- **Constrained PPO (C-PPO)** implemented in PyTorch  
+  A **primal-dual Lagrangian PPO** variant with a learnable dual multiplier λ, using a separate cost value function.
+
+### Gradient-free optimization
+- **Evolution Strategies (ES)** with antithetic sampling and rank-based shaping.
+
+---
+
+## Environment backends (pluggable)
+
+The environment is a Gymnasium-compatible `FisheryEnv` with interchangeable transition dynamics:
+
+- `backend=oceanrl`: calls the provided black-box transition function (if the wheel is installed).
+- `backend=toy`: a research-grade predator–prey model with seasonality, effort saturation, and process noise.
+- `backend=auto`: tries `oceanrl`, falls back to `toy`.
+
+This design supports development when the true environment is unavailable, while maintaining the same algorithm and evaluation interfaces.
+
+---
+
+## Repository layout
+
+```text
 src/fishery_rl/
-  envs/         Environment + transition dynamics backends (oceanrl / toy)
-  safety/       Constraints, cost functions, and verification harness
-  algorithms/   Training backends (SB3), C-PPO (PyTorch), ES (PyTorch)
+  envs/         FisheryEnv + transition backends (oceanrl / toy)
+  safety/       Constraints, cost signal, and verification harness
+  algorithms/   SB3 training, C-PPO (PyTorch), ES (PyTorch)
   tuning/       Optuna tuning driver (shared across algorithms)
-  evaluation/   Rollout utilities and metrics
-  scripts/      CLI entrypoints for train / eval / tune / verify
+  evaluation/   Rollout utilities and return-risk metrics
+  scripts/      CLI entrypoints: train / eval / tune / verify
+tests/          Minimal smoke test
+```
 
-Install
+---
 
-    pip install -r requirements.txt
-    pip install -e .
+## Installation
 
-Windows quick env setup (named `fishery`)
+### Requirements
+- Python 3.10+
+- (Optional) CUDA-capable GPU for faster training with SB3/Torch
 
-    python -m venv fishery
-    .\fishery\Scripts\activate
-    python -m pip install -U pip
-    pip install -r requirements.txt
-    pip install -e .
+Install:
 
-Running a fast local smoke test (toy backend)
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
 
-    python -m fishery_rl.scripts.train --algo ppo --backend toy --timesteps 3000 --horizon 60 --out runs/smoke
-    python -m fishery_rl.scripts.verify --algo ppo --backend toy --model runs/smoke/model.zip --n-rollouts 30 --horizon 60
+Optional: if you have the staff-provided wheel:
 
-Run all six requested algorithms + Optuna + optional LLM analysis
+```bash
+pip install path/to/oceanrl-0.1.0-py3-none-any.whl
+```
 
-    python -m fishery_rl.scripts.benchmark --backend toy --train-steps 6000 --horizon 90 --verify-rollouts 20 --optuna-trials 3 --optuna-train-steps 4000 --optuna-eval-episodes 3 --out runs/benchmark_all
+---
 
-Optional: add deep LLM interpretation for already-generated results
+## Usage
 
-    set OPENROUTER_API_KEY=your_key_here
-    python -m fishery_rl.scripts.llm_analyze --summary runs/benchmark_all/summary.json
+See **QUICKSTART.md** for a minimal smoke test and common workflows.
 
-Training on the oceanrl backend
+### Train
 
-    pip install path/to/oceanrl-0.1.0-py3-none-any.whl
-    python -m fishery_rl.scripts.train --algo sac --backend oceanrl --timesteps 200000 --out runs/sac_oceanrl
+```bash
+python -m fishery_rl.scripts.train --algo ppo --backend toy --timesteps 50000 --horizon 900 --out runs/ppo_toy
+```
 
-Hyperparameter tuning
+### Evaluate (distributional safety/return stats)
 
-    python -m fishery_rl.scripts.tune --algo tqc --backend toy --trials 30 --train-steps 20000 --eval-episodes 5
+```bash
+python -m fishery_rl.scripts.eval --algo ppo --backend toy --model runs/ppo_toy/model.zip --n-eval 30 --horizon 900
+```
 
-Unknown/pluggable environment support
+### Verify under uncertainty (Monte Carlo policy verification)
 
-- `train`, `eval`, `verify`, `tune`, and `benchmark` support `--custom-env module:Class`.
-- The target class must follow Gymnasium env conventions (`reset`/`step`, `observation_space`, `action_space`).
-- Example:
+```bash
+python -m fishery_rl.scripts.verify --algo ppo --backend toy --model runs/ppo_toy/model.zip --n-rollouts 100 --horizon 900 --out runs/ppo_toy
+```
 
-    python -m fishery_rl.scripts.train --algo ppo --custom-env my_pkg.my_env:MyEnv --timesteps 10000 --out runs/custom_env_ppo
+### Hyperparameter tuning (Optuna)
 
-Policy verification
+```bash
+python -m fishery_rl.scripts.tune --algo td3 --backend toy --trials 25 --train-steps 20000 --eval-episodes 5 --horizon 90 --out optuna_results/td3_toy
+```
 
-Verification is implemented as a reproducible evaluation protocol:
-- multi-seed Monte Carlo rollouts
-- return distribution summary (mean, std, quantiles, CVaR)
-- safety violation probability and time-to-violation statistics
+The Optuna objective is:
 
-    python -m fishery_rl.scripts.verify --algo cppo --backend toy --model runs/cppo/model.pt --n-rollouts 100
+- `score = mean_return - safety_penalty * violation_rate`
 
-Notes on safety constraints
+This explicitly trades off performance and safety.
 
-The environment provides a cost signal based on hard safety boundaries (salmon >= salmon_min, sharks >= shark_min).
-- In reward-shaping mode, violations add a penalty term to reward.
-- In constrained mode (C-PPO), the optimizer uses a Lagrangian dual variable to enforce an expected-cost limit.
+---
 
-Reproducibility and rigor
+## Extending to new environments
 
-All scripts support:
-- deterministic seeding
-- run directories with config.json, metrics.csv, and checkpoints
-- multi-seed evaluation
+### Plugging in a custom environment (Gymnasium)
 
-License: MIT
+All entrypoints support `--custom-env module:Class` to inject a Gymnasium-compatible env.
+
+Example:
+
+```bash
+python -m fishery_rl.scripts.train --algo ppo --custom-env my_pkg.my_env:MyEnv --timesteps 10000 --out runs/custom_env_ppo
+```
+
+**Requirements for custom envs:**
+- Implements `reset()` and `step()`
+- Defines `observation_space` and `action_space`
+- Returns an `info` dict with a numeric `cost` field for constrained/verification workflows (recommended)
+
+### Plugging in a new dynamics backend
+
+Add a new dynamics class in `fishery_rl/envs/dynamics.py` matching:
+
+- `step(salmon, shark, effort, month_1_indexed, rng) -> (salmon_caught, salmon_next, shark_next)`
+
+---
+
+## Reproducibility
+
+- Deterministic seeding is supported in all scripts.
+- Each run directory writes:
+  - `config.json`
+  - model checkpoint (`model.zip` or `model.pt`)
+  - TensorBoard logs (`runs/.../tb`)
+
+TensorBoard:
+
+```bash
+tensorboard --logdir runs
+```
+
+---
+
+## License
+
+MIT. See `LICENSE`.
